@@ -61,7 +61,13 @@ app.get("/htmlDemo", (req, res) => {
 });
 
 app.get("/addStudent", (req, res) => {
-    res.render('addStudent', {layout: 'main'});
+    collegeData.getCourses()
+    .then((courses) => {
+        res.render("addStudent", {data: courses});
+    })
+    .catch((err) => {
+        res.render("addStudent", {courses: []}); 
+    });
 });
 
 app.post("/students/add", (req, res) => {
@@ -106,14 +112,38 @@ app.get("/students", (req, res) => {
     }
 });
 
-app.get("/students/:num", (req, res) => {
-    collegeData.getStudentByNum(req.params.num)
-    .then((students) => {
-        res.render("student", { data: students }); 
-    })
-    .catch((err) => {
-        res.render("students", {message: "No Results"});
-    })
+app.get("/students/:id", (req, res) => {
+    let viewData = {};
+    collegeData.getStudentByNum(req.params.id).then((data) => {
+        if (data) {
+            viewData.student = data; //store student data in the "viewData" object as "student"
+        } else {
+            viewData.student = null; // set student to null if none were returned
+        }
+    }).catch(() => {
+        viewData.student = null; // set student to null if there was an error 
+    }).then(() => collegeData.getCourses())
+    .then((data) => {
+        viewData.courses = data; // store course data in the "viewData" object as "courses"
+        // loop through viewData.courses and once we have found the courseId that matches
+        // the student's "course" value, add a "selected" property to the matching 
+        // viewData.courses object
+
+        for (let i = 0; i < viewData.courses.length; i++) {
+            if (viewData.courses[i].courseId == viewData.student.course) {
+                viewData.courses[i].selected = true;
+            }
+        }
+
+    }).catch(() => {
+        viewData.courses = []; // set courses to empty if there was an error
+    }).then(() => {
+        if (viewData.student == null) { // if no student - return an error
+            res.status(404).send("Student Not Found");
+        } else {
+            res.render("student", { viewData: viewData }); // render the "student" view
+        }
+    });
 });
 
 app.post("/student/update", (req, res) => {
@@ -126,6 +156,31 @@ app.post("/student/update", (req, res) => {
         res.status(400).send(`<script>alert('Something Went Wrong');</script>`);
     })
 });
+
+app.get("/student/delete/:id", (req, res) => {
+    collegeData.deleteStudent(req.params.id)
+    .then((student) => {
+        res.redirect("/students");
+    })
+    .catch((err) => {
+        res.status(500).send(`<script>alert('Unable to Remove Student / Student not found');</script>`);
+    })
+});
+
+app.get("/addCourse", (req, res) => {
+    res.render('addCourse', {layout: 'main'});
+});
+
+app.post("/course/add", (req, res) => {
+    collegeData.addCourse(req.body)
+    .then(() => {
+        res.redirect("/courses");
+    })
+    .catch((error) => {
+        console.log(error.message)
+        res.status(400).send(`<script>alert('Something Went Wrong'); window.location.href = '/addCourse';</script>`);
+    })
+})
 
 app.get("/courses", (req, res) => {
     collegeData.getCourses()
@@ -142,13 +197,34 @@ app.get("/courses", (req, res) => {
     })
 });
 
-app.get("/course/:num", (req, res) => {
-    collegeData.getCourseById(req.params.num)
+app.get("/course/:id", (req, res) => {
+    collegeData.getCourseById(req.params.id)
     .then((course) => {
         res.render("course", { data: course }); 
     })
     .catch((err) => {
         res.render("course", {message: "No Results"});
+    })
+});
+
+app.post("/course/update", (req, res) => {
+    collegeData.updateCourse(req.body)
+    .then(() => {
+        res.redirect("/courses");
+    })
+    .catch((error) => {
+        console.log(error);
+        res.status(400).send(`<script>alert('Something Went Wrong');</script>`);
+    })
+});
+
+app.get("/course/delete/:id", (req, res) => {
+    collegeData.deleteCourse(req.params.id)
+    .then((course) => {
+        res.redirect("/courses");
+    })
+    .catch((err) => {
+        res.status(500).send(`<script>alert('Unable to Remove Course / Course not found');</script>`);
     })
 });
 

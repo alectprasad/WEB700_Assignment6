@@ -90,11 +90,11 @@ module.exports.getCourses = function(){
     });
 };
 
-module.exports.getCourseById = function(num){
+module.exports.getCourseById = function(id){
     return new Promise(function (resolve, reject) {
-        Student.findAll({ 
+        Course.findAll({ 
             where: {
-                courseId: num
+                courseId: id
             }
         })
         .then((courseData) => {
@@ -105,11 +105,11 @@ module.exports.getCourseById = function(num){
     });
  };
 
-module.exports.getStudentByNum = function(num) {
+module.exports.getStudentByNum = function(id) {
     return new Promise(function (resolve, reject) {
         Student.findAll({ 
             where: {
-                studentNum: num
+                studentNum: id
             }
         })
         .then((studentData) => {
@@ -160,10 +160,7 @@ module.exports.addStudent = function (requestBody) {
 module.exports.updateStudent = function (requestBody) {
     return new Promise(function (resolve, reject) {
         try {
-            if(requestBody.TA === "" || requestBody.TA === undefined)
-                requestBody.TA = false;
-            else
-                requestBody.TA = true;
+            requestBody.TA = (requestBody.TA) ? true : false;
             for (let key in requestBody) {
                 if (requestBody.hasOwnProperty(key)) {
                     if (requestBody[key] === "" || requestBody[key] === undefined) {
@@ -181,5 +178,80 @@ module.exports.updateStudent = function (requestBody) {
             console.log(err)
             reject(err);
         }
+    });
+};
+
+module.exports.deleteStudent = function (id) {
+    return new Promise(function(resolve, reject) {
+        Student.destroy({
+            where: { studentNum: id }
+        })
+        .then(function () { 
+            resolve(`successfully removed student ${id}`);
+        })
+        .catch(function (err) {
+            console.log(err);
+            reject(err);
+        });
+    });
+};
+
+
+module.exports.addCourse = function (requestBody) {
+    return new Promise(function (resolve, reject) {
+        try {
+            for (let key in requestBody) {
+                if (requestBody.hasOwnProperty(key)) {
+                    if (requestBody[key] === "" || requestBody[key] === undefined) {
+                        requestBody[key] = null;
+                    }
+                }
+            }
+            Course.create(requestBody)
+            .then(() => {
+                resolve("Course Added");
+            });
+        } catch (err) {
+            console.log(err)
+            reject(err);
+        }
+    });
+};
+
+module.exports.updateCourse = function (requestBody) {
+    return new Promise(function (resolve, reject) {
+        try {
+            for (let key in requestBody) {
+                if (requestBody.hasOwnProperty(key)) {
+                    if (requestBody[key] === "" || requestBody[key] === undefined) {
+                        requestBody[key] = null;
+                    }
+                }
+            }
+            Course.update(requestBody, {
+                where: { courseId: requestBody.courseId }
+            })
+            .then(() => {
+                resolve("Course Updated");
+            });
+        } catch (err) {
+            console.log(err)
+            reject(err);
+        }
+    });
+};
+
+module.exports.deleteCourse = function (id) {
+    return new Promise(function(resolve, reject) {
+        Course.destroy({
+            where: { courseId: id }
+        })
+        .then(function () { 
+            resolve(`successfully removed course ${id}`);
+        })
+        .catch(function (err) {
+            console.log(err);
+            reject(err);
+        });
     });
 };
