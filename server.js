@@ -79,7 +79,11 @@ app.get("/students", (req, res) => {
     if (req.query && req.query.course) {
         collegeData.getStudentsByCourse(req.query.course)
         .then((students) => {
-            res.render("students", {data: students});
+            if(students.length > 0) {
+                res.render("students", {data: students});
+            } else {
+                res.render("students",{ message: "No results" });
+            }
         })
         .catch((err) => {
             console.log(err.message);
@@ -89,7 +93,11 @@ app.get("/students", (req, res) => {
     else {
         collegeData.getAllStudents()
         .then((students) => {
-            res.render("students", {data: students});
+            if(students.length > 0) {
+                res.render("students", {data: students});
+            } else {
+                res.render("students",{ message: "No results" });
+            }
         })
         .catch((err) => {
             console.log(err.message);
@@ -122,7 +130,11 @@ app.post("/student/update", (req, res) => {
 app.get("/courses", (req, res) => {
     collegeData.getCourses()
     .then((courses) => {
-        res.render("courses", {data: courses});
+        if(courses.length > 0) {
+            res.render("courses", {data: courses});
+        } else {
+            res.render("courses",{ message: "No results" });
+        }
     })
     .catch((err) => {
         console.log(err.message);
@@ -145,8 +157,8 @@ app.all('*',(req, res) => {
 });
 // setup http server to listen on HTTP_PORT
 collegeData.initialize()
-.then ((students) => {
-    console.log(`${students} loaded`)
+.then ((message) => {
+    console.log(message)
     app.listen(HTTP_PORT, ()=>{console.log("server listening on port: " + HTTP_PORT)});
 }).catch((err) => {
     console.log(err.message);
